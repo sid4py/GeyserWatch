@@ -17,11 +17,13 @@ After a bit of data cleaning, preliminary EDA revealed various aspects of the da
 
 **Data Processing**
 
-To deal with these issues, I processed my data through a three step pipeline which can be called as the 'Transform-Filter-Smooth'. In the transform step, I calculate a value with the variable name 't_nxt_eruption' that capture the time elapsed between two consequetive eruptions. Thus for each timestamp, I now have a corresponding measured value equal to the length of time untill the next eruption.
+To deal with these issues, I processed my data through a three step pipeline which can be called as the 'Transform-Filter-Smooth'.
 
-Because there were missing events between two consequentive recorded events, the value of 't_nxt_eruption' became very large for some time points. Plotting a histogram of t_nxt_eruption values revealed a long tailed distribution. In the 'Filter' step, I remove the long tail and thus pruning the data to a subset that is much cleaner.
+1) In the transform step, I calculate a value with the variable name 't_nxt_eruption' that capture the time elapsed between two consequetive eruptions. Thus for each timestamp, I now have a corresponding measured value equal to the length of time untill the next eruption.
 
-Even after filtering the data, I observed that my data was still noisy. Hence, in the 'Smooth' step, I perform a smoothing procedure by averaging over a rolling window of 5 events.
+2) Because there were missing events between two consequentive recorded events, the value of 't_nxt_eruption' became very large for some time points. Plotting a histogram of t_nxt_eruption values revealed a long tailed distribution. In the 'Filter' step, I remove the long tail and thus pruning the data to a subset that is much cleaner.
+
+3) Even after filtering the data, I observed that my data was still noisy. Hence, in the 'Smooth' step, I perform a smoothing procedure by averaging over a rolling window of 5 events.
 
 **Fitting Time Series using Prophet and Validating Results**
 
