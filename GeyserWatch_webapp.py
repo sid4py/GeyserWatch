@@ -28,14 +28,20 @@ df['hover_text'] = [str(df.loc[i,'time'])[:-3] + ' ± ' + str(df.loc[i,'time_win
 marks = df['date'].unique()
 
 # ----- Getting current time and date for Mountain time -----
-curr_time = datetime.datetime.now()
-convtz = pytz.timezone('US/Mountain')
-curr_time = curr_time.astimezone(convtz)
-todays_date = curr_time.date()
+local_curr_time = datetime.datetime.now()
+mtn_tz = pytz.timezone('US/Mountain')
+mtn_time_now = local_curr_time.astimezone(mtn_tz)
+todays_date = mtn_time_now.date()
 # Setting slider value to always initialize at todays date
 for i in range(len(marks)):
 	if marks[i] == todays_date:
 		sliderval = i
+
+# ----- Getting UTC time for calculating time difference value (to take care of Daylight Savings Time) -----
+utc_tz = pytz.timezone('UTC')
+utc_time_now = local_curr_time.astimezone(utc_tz)
+# converting to epoch to get integer difference in seconds
+t_diff = time.mktime(utc_time_now.timetuple()) - time.mktime(mtn_time_now.timetuple())
 
 
 image_directory = '/home/ubuntu/geyserwatch_webapp'
@@ -110,9 +116,9 @@ app.layout = html.Div([
 						), html.Img(id='image', style={'width':'500px'})
 					], className="six columns", style={'width':'40%', 'display':'inline-block', 'float':'top', 'float':'right', 'padding-right':'3%'}),
 
-					html.Hr()
-
 				], className="row"),
+
+				html.Hr(),
 
 				html.H5('Thank you for visiting Geyser Watch', style={'textAlign':'center'}),
 
@@ -144,12 +150,12 @@ def update_figure(selected_day):
 	dtts = selected_date.timetuple() 
 	ts = time.mktime(dtts)
 	# Converting epoch from UTC to Mountain Time
-	ts = ts + 21600
+	ts = ts + t_diff #21600 #25200
 
 	# Making xaxis range
-	xrange = []
-	xrange.append(ts)
-	xrange.append(ts + 86400) # Adding 24 hours to range - i.e. 86400 seconds
+	x_range = []
+	x_range.append(ts)
+	x_range.append(ts + 86400) # Adding 24 hours to range - i.e. 86400 seconds
 	# The x axis ranges now from 0000 hrs on selected date to midnight of selected date
 
 	# ----- Creating a fixed tick values list -----
@@ -162,7 +168,7 @@ def update_figure(selected_day):
 	# ----- Creating a fixed tick text list -----
 	ticktext_list = []
 	for i in tickval_list:
-	    i = i - 21600 # Converting from Mountain time back into UTC - because data points are in UTC epoch
+	    i = i - t_diff #25200 #21600 # Converting from Mountain time back into UTC - because data points are in UTC epoch
 	    t = str(datetime.datetime.fromtimestamp(i).time())
 	    ticktext_list.append(t[:-3])
 
@@ -170,7 +176,7 @@ def update_figure(selected_day):
 	tz = pytz.timezone('US/Mountain')
 	tn_str = str(selected_date)+' '+str(datetime.datetime.now().astimezone(tz).replace(second=0,microsecond=0).time())
 	tn_dt_obj = datetime.datetime.strptime(tn_str, '%Y-%m-%d %H:%M:%S')
-	time_now = tn_dt_obj.timestamp() + 21600
+	time_now = tn_dt_obj.timestamp() + t_diff #25200 #21600
 	time_list = [time_now]*7
 	tn_hover = str(tn_dt_obj.time())[:-3]
 
@@ -222,7 +228,7 @@ def update_figure(selected_day):
 			)
 
 	fig = go.Figure(data=data, layout=layout)
-	fig.update_xaxes(range=xrange, tickangle=45, tickfont={'size':14}, showline=True, linewidth=1, linecolor='black', mirror=True, title_font={'size':18})
+	fig.update_xaxes(range=x_range, tickangle=45, tickfont={'size':14}, showline=True, linewidth=1, linecolor='black', mirror=True, title_font={'size':18})
 	fig.update_yaxes(tickfont={'size':16})
 
 	filcols = ['geyser','date','time','time_window']
